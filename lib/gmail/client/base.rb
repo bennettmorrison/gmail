@@ -64,6 +64,7 @@ module Gmail
       def logout
         @imap && logged_in? and @imap.logout
       ensure
+        @current_mailbox = nil
         @logged_in = false
       end
       alias :sign_out :logout
