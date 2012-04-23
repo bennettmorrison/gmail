@@ -18,7 +18,7 @@ module Gmail
       end
 
       def login(raise_errors=false)
-        @imap and @logged_in = (login = @imap.authenticate('XOAUTH', username,
+        @imap && !logged_in? and @logged_in = (login = @imap.authenticate('XOAUTH', username,
           :consumer_key    => consumer_key,
           :consumer_secret => consumer_secret,
           :token           => token,
