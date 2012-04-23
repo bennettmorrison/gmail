@@ -17,11 +17,13 @@ module Gmail
     }
   
     attr_reader :name
+    attr_reader :uidvalidity
     attr_reader :external_name
 
-    def initialize(gmail, name="INBOX")
+    def initialize(gmail, name="INBOX", uidvalidity = nil)
       @name  = name
       @external_name = Net::IMAP.decode_utf7(name)
+      @uidvalidity = uidvalidity
       @gmail = gmail
     end
 

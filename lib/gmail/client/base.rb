@@ -155,8 +155,8 @@ module Gmail
       def mailbox(name, &block)
         @mailbox_mutex.synchronize do
           name = name.to_s
-          mailbox = (mailboxes[name] ||= Mailbox.new(self, name))
           switch_to_mailbox(name) if @current_mailbox != name
+          mailbox = (mailboxes[name] ||= Mailbox.new(self, name, @imap.responses["UIDVALIDITY"][-1]))
 
           if block_given?
             mailbox_stack << @current_mailbox
