@@ -56,7 +56,7 @@ module Gmail
       
       # Returns +true+ when you are logged in to specified account.
       def logged_in?
-        !!@logged_in
+        !(@imap.disconnected? || !@logged_in)
       end
       alias :signed_in? :logged_in?
       
