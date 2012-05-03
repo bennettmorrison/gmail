@@ -151,18 +151,21 @@ module Gmail
       #     mailbox.count(:all)
       #     ...
       #   end
-      def mailbox(name, &block)
+      def mailbox(name, examine = false, &block)
         @mailbox_mutex.synchronize do
           name = name.to_s
-          mailbox = (mailboxes[name] ||= Mailbox.new(self, name))
-          switch_to_mailbox(name) if @current_mailbox != name
+          switch_to_mailbox(name, examine) if mailbox_stack.last != [name, examine]
+          mailbox = (mailboxes[[name, examine]] ||= Mailbox.new(self, name, examine))
 
           if block_given?
-            mailbox_stack << @current_mailbox
+            mailbox_stack << [@current_mailbox, examine]
             result = block.arity == 1 ? block.call(mailbox) : block.call
             mailbox_stack.pop
-            switch_to_mailbox(mailbox_stack.last)
+            switch_to_mailbox(*mailbox_stack.last)
             return result
+          else
+            mailbox_stack.pop
+            mailbox_stack.push [@current_mailbox, examine]
           end
 
           return mailbox
@@ -196,10 +199,14 @@ module Gmail
       
       private
       
-      def switch_to_mailbox(mailbox)
+      def switch_to_mailbox(mailbox, examine = false)
         if mailbox
           mailbox = Net::IMAP.encode_utf7(mailbox)
-          conn.select(mailbox)
+          if examine
+            conn.examine(mailbox)
+          else
+            conn.select(mailbox)
+          end
         end
         @current_mailbox = mailbox
       end
