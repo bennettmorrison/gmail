@@ -19,12 +19,14 @@ module Gmail
     attr_reader :name
     attr_reader :uidvalidity
     attr_reader :external_name
+    attr_reader :examine
 
-    def initialize(gmail, name="INBOX", uidvalidity = nil)
+    def initialize(gmail, name="INBOX", uidvalidity = nil, examine = false)
       @name  = name
       @external_name = Net::IMAP.decode_utf7(name)
       @uidvalidity = uidvalidity
       @gmail = gmail
+      @examine = examine
     end
 
     # Returns list of emails which meets given criteria. 

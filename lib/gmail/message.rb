@@ -23,12 +23,12 @@ module Gmail
     
     # Mark message with given flag.
     def flag(name)
-      !!@gmail.mailbox(@mailbox.name) { @gmail.conn.uid_store(uid, "+FLAGS", [name]) }
+      !!with_mailbox { @gmail.conn.uid_store(uid, "+FLAGS", [name]) }
     end
     
     # Unmark message. 
     def unflag(name)
-      !!@gmail.mailbox(@mailbox.name) { @gmail.conn.uid_store(uid, "-FLAGS", [name]) }
+      !!with_mailbox { @gmail.conn.uid_store(uid, "-FLAGS", [name]) }
     end
     
     # Do commonly used operations on message. 
@@ -152,17 +152,21 @@ module Gmail
     end
 
     def envelope
-      @envelope ||= @gmail.mailbox(@mailbox.name) {
+      @envelope ||= with_mailbox {
         @gmail.conn.uid_fetch(uid, "ENVELOPE")[0].attr["ENVELOPE"]
       }
     end
     
     def message
-      @message ||= Mail.new(@gmail.mailbox(@mailbox.name) { 
+      @message ||= Mail.new(with_mailbox { 
         @gmail.conn.uid_fetch(uid, "RFC822")[0].attr["RFC822"] # RFC822
       })
     end
     alias_method :raw_message, :message
+
+    def with_mailbox(&block)
+      @gmail.mailbox(@mailbox.name, @mailbox.examine, &block)
+    end
 
   end # Message
 end # Gmail
