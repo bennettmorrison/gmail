@@ -56,6 +56,7 @@ will be installed automatically):
   images and attachments
 * Utilizes Gmail's IMAP & SMTP, MIME-type detection and parses and generates 
   MIME properly.
+* "Read-only" mode to leave email read status
 
 ## Basic usage
 
@@ -173,6 +174,12 @@ Save all attachments in the "Faxes" label to a local folder:
 You can use also `#label` method instead of `#mailbox`: 
 
     gmail.label("Faxes").emails {|email| ... }
+
+To use the read-only mode with a mailbox, simply add true to the `#label` call
+  
+    gmail.label("Faxes", true).emails
+    gmail.in_label("Faxes", true).emails
+    gmail.mailbox("Faxes", true).emails
 
 Save just the first attachment from the newest unread email (assuming pdf):
 
