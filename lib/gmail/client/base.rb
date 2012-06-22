@@ -152,19 +152,11 @@ module Gmail
       #     mailbox.count(:all)
       #     ...
       #   end
-<<<<<<< HEAD
       def mailbox(name, examine = false, &block)
-        @mailbox_mutex.synchronize do
+        @mailbox_monitor.synchronize do
           name = name.to_s
           switch_to_mailbox(name, examine) if mailbox_stack.last != [name, examine]
           mailbox = (mailboxes[[name, examine]] ||= Mailbox.new(self, name, @imap.responses["UIDVALIDITY"][-1], examine))
-=======
-      def mailbox(name, &block)
-        @mailbox_monitor.synchronize do
-          name = Net::IMAP.encode_utf7(name.to_s)
-          mailbox = (mailboxes[name] ||= Mailbox.new(self, name))
-          switch_to_mailbox(name) if @current_mailbox != name
->>>>>>> c410d16... using monitor instead of mutex to allow reentry
 
           if block_given?
             mailbox_stack << [@current_mailbox, examine]
