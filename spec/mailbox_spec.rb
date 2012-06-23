@@ -34,6 +34,7 @@ describe "A Gmail mailbox" do
       end
     end
     
+    
     it "should be able to do a full text search of message bodies" do
       pending "This can wait..."
       #mock_mailbox do |mailbox|
@@ -42,6 +43,30 @@ describe "A Gmail mailbox" do
       #  emails = mailbox.emails(:search => body.split(' ').first)
       #  emails.size.should > 0
       #end
+    end
+    
+    describe ":include" do
+      it "eager loads message bodies" do
+        mock_mailbox do |mailbox|
+          start_time = Time.now
+          mailbox.emails(:all, :include => :message).first.message.should be
+        end
+      end
+      
+      it "eager loads message envelopes" do
+        mock_mailbox do |mailbox|
+          mailbox.emails(:all, :include => :envelope).first.envelope.should be
+        end
+      end
+    
+      it "eager loads message bodies and envelopes" do
+        mock_mailbox do |mailbox|
+          mail = mailbox.emails(:all, :include => :both).first
+          mail.envelope.should be
+          mail.message.should be
+        end
+      end
+      
     end
   end
 end

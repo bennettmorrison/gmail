@@ -7,10 +7,12 @@ module Gmail
   
     attr_reader :uid
     
-    def initialize(mailbox, uid)
+    def initialize(mailbox, uid, options={})
       @uid     = uid
       @mailbox = mailbox
       @gmail   = mailbox.instance_variable_get("@gmail") if mailbox
+      @message = options[:message]
+      @envelope = options[:envelope]
     end
         
     def labels

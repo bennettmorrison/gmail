@@ -45,43 +45,68 @@ module Gmail
     #     end
     #   end
     def emails(*args, &block)
-      args << :all if args.size == 0
-
-      if args.first.is_a?(Symbol) 
-        search = MAILBOX_ALIASES[args.shift].dup
-        opts = args.first.is_a?(Hash) ? args.first : {}
-        
-        opts[:after]      and search.concat ['SINCE', opts[:after].to_imap_date]
-        opts[:before]     and search.concat ['BEFORE', opts[:before].to_imap_date]
-        opts[:on]         and search.concat ['ON', opts[:on].to_imap_date]
-        opts[:from]       and search.concat ['FROM', opts[:from]]
-        opts[:to]         and search.concat ['TO', opts[:to]]
-        opts[:subject]    and search.concat ['SUBJECT', opts[:subject]]
-        opts[:label]      and search.concat ['LABEL', opts[:label]]
-        opts[:attachment] and search.concat ['HAS', 'attachment']
-        opts[:search]     and search.concat ['BODY', opts[:search]]
-        opts[:body]       and search.concat ['BODY', opts[:body]]
-        opts[:uid]        and search.concat ['UID', opts[:uid]]
-        opts[:query]      and search.concat opts[:query]
-
-        @gmail.mailbox(name) do
-          @gmail.conn.uid_search(search).collect do |uid| 
-            message = (messages[uid] ||= Message.new(self, uid))
-            block.call(message) if block_given?
-            message
-          end
-        end
-      elsif args.first.is_a?(Hash)
-        emails(:all, args.first)
-      else
-        raise ArgumentError, "Invalid search criteria"
+      fetch = case args.first
+              when Symbol then args[1].delete(:include) if args[1]
+              when Hash then   args.delete(:include)
+              end
+      fetch = fetch.to_sym if fetch
+      
+      uids = fetch_uids(*args)
+      
+      bodies = {}
+      envelopes = {}
+      
+      if fetch == :message || fetch == :both
+        bodies = Hash[@gmail.conn.uid_fetch(uids, "RFC822").collect {|x| [x.attr["UID"], x.attr["RFC822"]]}]
+      end
+      if fetch == :envelope || fetch == :both
+        envelopes = Hash[@gmail.conn.uid_fetch(uids, "ENVELOPE").collect {|x| [x.attr["UID"], x.attr["ENVELOPE"]]}]
+      end
+      uids.collect do |uid| 
+        message = (messages[uid] ||= Message.new(self, uid, message: bodies[uid], envelopes: envelopes[uid]))
+        block.call(message) if block_given?
+        message
       end
     end
+      
     alias :mails :emails
     alias :search :emails
     alias :find :emails
     alias :filter :emails
+    
+    #      @gmail.conn.uid_fetch(uid, "ENVELOPE")[0].attr["ENVELOPE"]
+    #      @gmail.conn.uid_fetch(uids, "RFC822")[0].attr["RFC822"] # full message
+    
+    def fetch_uids(*args)
+      args << :all if args.size == 0
 
+        if args.first.is_a?(Symbol) 
+          search = MAILBOX_ALIASES[args.shift].dup
+          opts = args.first.is_a?(Hash) ? args.first : {}
+          
+          opts[:after]      and search.concat ['SINCE', opts[:after].to_imap_date]
+          opts[:before]     and search.concat ['BEFORE', opts[:before].to_imap_date]
+          opts[:on]         and search.concat ['ON', opts[:on].to_imap_date]
+          opts[:from]       and search.concat ['FROM', opts[:from]]
+          opts[:to]         and search.concat ['TO', opts[:to]]
+          opts[:subject]    and search.concat ['SUBJECT', opts[:subject]]
+          opts[:label]      and search.concat ['LABEL', opts[:label]]
+          opts[:attachment] and search.concat ['HAS', 'attachment']
+          opts[:search]     and search.concat ['BODY', opts[:search]]
+          opts[:body]       and search.concat ['BODY', opts[:body]]
+          opts[:uid]        and search.concat ['UID', opts[:uid]]
+          opts[:query]      and search.concat opts[:query]
+
+          @gmail.mailbox(name) do
+            uids = @gmail.conn.uid_search(search)
+          end
+        elsif args.first.is_a?(Hash)
+          fetch_mails(:all, args.first)
+        else
+          raise ArgumentError, "Invalid search criteria"
+        end
+    end
+      
     # This is a convenience method that really probably shouldn't need to exist, 
     # but it does make code more readable, if seriously all you want is the count 
     # of messages.

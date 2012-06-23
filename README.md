@@ -175,11 +175,17 @@ You can use also `#label` method instead of `#mailbox`:
 
     gmail.label("Faxes").emails {|email| ... }
 
-To use the read-only mode with a mailbox, simply add true to the `#label` call
+To use the read-only mode (IMAP examine mode) with a mailbox, simply add true to the `#label` call
   
     gmail.label("Faxes", true).emails
     gmail.in_label("Faxes", true).emails
     gmail.mailbox("Faxes", true).emails
+
+To use the eager loading of message bodies or envelopes, call `#emails` with an `:include` argument
+    
+    gmail.inbox.emails(:include => :message) # gmail.inbox.emails(:include => "messages") also valid
+    gmail.inbox.emails(:include => :envelope)
+    gmail.inbox.emails(:include => :both)
 
 Save just the first attachment from the newest unread email (assuming pdf):
 
