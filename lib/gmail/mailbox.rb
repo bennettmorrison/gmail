@@ -63,7 +63,7 @@ module Gmail
         envelopes = Hash[@gmail.conn.uid_fetch(uids, "ENVELOPE").collect {|x| [x.attr["UID"], x.attr["ENVELOPE"]]}]
       end
       uids.collect do |uid| 
-        message = (messages[uid] ||= Message.new(self, uid, message: bodies[uid], envelopes: envelopes[uid]))
+        message = (messages[uid] ||= Message.new(self, uid, message: bodies[uid], envelope: envelopes[uid]))
         block.call(message) if block_given?
         message
       end
