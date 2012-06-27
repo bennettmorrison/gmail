@@ -55,13 +55,15 @@ module Gmail
       
       bodies = {}
       envelopes = {}
-      
-      if fetch == :message || fetch == :both
-        bodies = Hash[@gmail.conn.uid_fetch(uids, "RFC822").collect {|x| [x.attr["UID"], x.attr["RFC822"]]}]
+      unless uids.empty?
+        if fetch == :message || fetch == :both
+          bodies = Hash[@gmail.conn.uid_fetch(uids, "RFC822").collect {|x| [x.attr["UID"], x.attr["RFC822"]]}]
+        end
+        if fetch == :envelope || fetch == :both
+          envelopes = Hash[@gmail.conn.uid_fetch(uids, "ENVELOPE").collect {|x| [x.attr["UID"], x.attr["ENVELOPE"]]}]
+        end
       end
-      if fetch == :envelope || fetch == :both
-        envelopes = Hash[@gmail.conn.uid_fetch(uids, "ENVELOPE").collect {|x| [x.attr["UID"], x.attr["ENVELOPE"]]}]
-      end
+
       uids.collect do |uid| 
         message = (messages[uid] ||= Message.new(self, uid, message: bodies[uid], envelope: envelopes[uid]))
         block.call(message) if block_given?
