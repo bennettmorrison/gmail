@@ -74,9 +74,10 @@ module Gmail
     alias :find :emails
     alias :filter :emails
     
-    #      @gmail.conn.uid_fetch(uid, "ENVELOPE")[0].attr["ENVELOPE"]
-    #      @gmail.conn.uid_fetch(uids, "RFC822")[0].attr["RFC822"] # full message
-    
+    # Fetches the list of message UIDs based on the criteria provided
+    # 
+    # @param [Hash] criteria the search criteria
+    # @return [Array] an array of UIDs matching the search criteria 
     def fetch_uids(*args)
       args << :all if args.size == 0
 
@@ -101,7 +102,7 @@ module Gmail
             uids = @gmail.conn.uid_search(search)
           end
         elsif args.first.is_a?(Hash)
-          fetch_mails(:all, args.first)
+          fetch_uids(:all, args.first)
         else
           raise ArgumentError, "Invalid search criteria"
         end
