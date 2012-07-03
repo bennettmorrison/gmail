@@ -44,37 +44,68 @@ module Gmail
     #       ... do something with each email...
     #     end
     #   end
+    # @param [Symbol, Optional] search the mailbox alias (:all, unread, etc)
+    # @param [Hash, Optional] args the search options to use for fetch_uids
+    # @arg [:include, Optional] Part of the message to eager load. Can be :message, :envelope, or :both
+    # @arg [:batch_size, Optional] If given, sets the batch size to use when loading in messages. Defaults to single batch
+    # @arg [:cache_messages, Optional] If given, sets whether or not to cache the messages. False setting is useful when loading large email sets, to save on memory.
     def emails(*args, &block)
-      fetch = case args.first
-              when Symbol then args[1].delete(:include) if args[1]
-              when Hash then   args.delete(:include)
-              end
-      fetch = fetch.to_sym if fetch
-      
-      uids = fetch_uids(*args)
-      
-      bodies = {}
-      envelopes = {}
-      unless uids.empty?
-        if fetch == :message || fetch == :both
-          bodies = Hash[@gmail.conn.uid_fetch(uids, "RFC822").collect {|x| [x.attr["UID"], x.attr["RFC822"]]}]
+      if block_given?
+        proc = Proc.new do |batch| 
+          batch.each { |message| block.call(message) }
         end
-        if fetch == :envelope || fetch == :both
-          envelopes = Hash[@gmail.conn.uid_fetch(uids, "ENVELOPE").collect {|x| [x.attr["UID"], x.attr["ENVELOPE"]]}]
-        end
+        args << proc
       end
-
-      uids.collect do |uid| 
-        message = (messages[uid] ||= Message.new(self, uid, message: bodies[uid], envelope: envelopes[uid]))
-        block.call(message) if block_given?
-        message
-      end
+      emails_in_batches(*args)
     end
       
     alias :mails :emails
     alias :search :emails
     alias :find :emails
     alias :filter :emails
+    
+    # Same as emails, but yields the batch object as opposed to the individual email
+    # @param [Symbol, Optional] search the mailbox alias (:all, unread, etc)
+    # @param [Hash, Optional] args the search options to use for fetch_uids
+    # @arg [:include, Optional] Part of the message to eager load. Can be :message, :envelope, or :both
+    # @arg [:batch_size, Optional] If given, sets the batch size to use when loading in messages. Defaults to single batch
+    # @arg [:cache_messages, Optional] If given, sets whether or not to cache the messages. False setting is useful when loading large email sets, to save on memory.
+    def emails_in_batches(*args, &block)
+      opts =  case args.first
+              when Symbol
+                args[1] ? args[1] : {}
+              when Hash then args
+              else {}
+              end
+      uids = fetch_uids(*args)
+      fetch = opts[:include].to_s.to_sym
+      batch_size = opts[:batch_size] || uids.size
+      cache_messages = opts[:cache_messages] || true
+      @current_progress = 0
+      @total_entries = uids.size
+      
+      unless uids.empty?
+        tmp_cache = []
+        uids.each_slice(batch_size) do |slice|
+          bodies = {}
+          envelopes = {}
+          if fetch == :message || fetch == :both
+            bodies = Hash[@gmail.conn.uid_fetch(slice, "RFC822").collect {|x| [x.attr["UID"], x.attr["RFC822"]]}]
+          end
+          if fetch == :envelope || fetch == :both
+            envelopes = Hash[@gmail.conn.uid_fetch(slice, "ENVELOPE").collect {|x| [x.attr["UID"], x.attr["ENVELOPE"]]}]
+          end
+          batch = slice.collect do |uid| 
+            message = Message.new(self, uid, message: bodies[uid], envelope: envelopes[uid])
+            messages[uid] ||= message if cache_messages
+            message
+          end
+          batch = block.call(batch) if block_given?
+          tmp_cache = tmp_cache | batch unless batch.nil?
+        end
+        tmp_cache
+      end
+    end
     
     # Fetches the list of message UIDs based on the criteria provided
     # 
