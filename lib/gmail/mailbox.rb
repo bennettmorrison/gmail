@@ -80,7 +80,7 @@ module Gmail
       uids = fetch_uids(*args)
       fetch = opts[:include].to_s.to_sym
       batch_size = opts[:batch_size] || uids.size
-      cache_messages = opts[:cache_messages] || true
+      cache_messages = opts[:cache_messages] ? opts[:cache_messages] : true
       
       unless uids.empty?
         tmp_cache = []
@@ -99,7 +99,7 @@ module Gmail
             message
           end
           batch = block.call(batch) if block_given?
-          tmp_cache = tmp_cache | batch unless batch.nil? || block_given?
+          tmp_cache = tmp_cache | batch if cache_messages
         end
         tmp_cache
       end
