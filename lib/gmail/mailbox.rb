@@ -87,7 +87,7 @@ module Gmail
       unless uids.empty?
         tmp_cache = []
         batch_size = opts[:batch_size] || 100
-        cache_messages = opts[:cache_messages] ? opts[:cache_messages] : true
+        cache_messages = opts[:cache_messages].nil? ? true : opts[:cache_messages]
 
         fetch = ["UID"].push(opts[:include]).flatten.compact
         fetch = fetch.collect do |opt|
