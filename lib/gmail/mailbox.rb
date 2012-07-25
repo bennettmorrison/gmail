@@ -86,7 +86,7 @@ module Gmail
 
       unless uids.empty?
         tmp_cache = []
-        batch_size = opts[:batch_size] || uids.size
+        batch_size = opts[:batch_size] || 100
         cache_messages = opts[:cache_messages] ? opts[:cache_messages] : true
 
         fetch = ["UID"].push(opts[:include]).flatten.compact
@@ -95,15 +95,18 @@ module Gmail
           when "message", :message then "RFC822"
           when "envelope", :envelope then "ENVELOPE"
           when "labels", :labels then "X-GM-LABELS"
+          when "thread", :thread then "X-GM-THRID"
           else opt
           end
         end
 
         uids.each_slice(batch_size) do |slice|
           batch = @gmail.conn.uid_fetch(slice, fetch).collect do |msg|
-            attr = msg.attr
-            message = Message.new(self, attr["UID"], message: attr["RFC822"], envelope: attr["ENVELOPE"], labels: attr["X-GM-LABELS"])
-            messages[attr["UID"]] ||= message if cache_messages
+            message = Message.new(self, msg.attr["UID"], message: msg.attr["RFC822"],
+                                                         envelope: msg.attr["ENVELOPE"],
+                                                         labels: msg.attr["X-GM-LABELS"],
+                                                         thread_id: msg.attr["X-GM-THRID"])
+            messages[msg.attr["UID"]] ||= message if cache_messages
             message
           end
           batch = block.call(batch) if block_given?

@@ -14,6 +14,11 @@ module Gmail
       @message = options[:message]
       @envelope = options[:envelope]
       @labels = options[:labels]
+      @thread_id = options[:thread_id]
+    end
+
+    def thread_id
+      @thread_id ||= @gmail.conn.uid_fetch(uid, "X-GM-THRID")[0].attr["X-GM-THRID"]
     end
 
     def labels
