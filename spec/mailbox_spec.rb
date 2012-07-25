@@ -96,25 +96,25 @@ describe "A Gmail mailbox" do
       it "eager loads message bodies" do
         mock_mailbox do |mailbox|
           start_time = Time.now
-          mailbox.emails(:all, :include => :message).first.message.should be
+          mailbox.emails(:all, :include => :message).first.instance_variable_get(:@message).should be
         end
       end
 
       it "eager loads message envelopes" do
         mock_mailbox do |mailbox|
-          mailbox.emails(:all, :include => :envelope).first.envelope.should be
+          mailbox.emails(:all, :include => :envelope).first.instance_variable_get(:@envelope).should be
         end
       end
 
       it "eager loads message labels" do
         mock_mailbox do |mailbox|
-          mailbox.emails(:all, :include => :labels).first.envelope.should be
+          mailbox.emails(:all, :include => :labels).first.instance_variable_get(:@labels).should be
         end
       end
 
       it "eager loads message thread_ids" do
         mock_mailbox do |mailbox|
-          mailbox.emails(:all, :include => :thread).first.envelope.should be
+          mailbox.emails(:all, :include => :thread).first.instance_variable_get(:@thread_id).should be
         end
       end
 
