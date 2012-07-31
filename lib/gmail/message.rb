@@ -5,7 +5,7 @@ module Gmail
     # Raised when given label doesn't exists.
     class NoLabelError < Exception; end
 
-    attr_reader :uid
+    attr_reader :uid, :mailbox
 
     def initialize(mailbox, uid, options={})
       @uid     = uid
@@ -15,14 +15,7 @@ module Gmail
       @envelope = options[:envelope]
       @labels = options[:labels]
       @thread_id = options[:thread_id]
-    end
-
-    def thread_id
-      @thread_id ||= @gmail.conn.uid_fetch(uid, "X-GM-THRID")[0].attr["X-GM-THRID"]
-    end
-
-    def labels
-      @labels ||= @gmail.conn.uid_fetch(uid, "X-GM-LABELS")[0].attr["X-GM-LABELS"]
+      @msg_id = options[:msg_id]
     end
 
     def uid
@@ -86,6 +79,14 @@ module Gmail
       move_to(trash) unless %w[[Gmail]/Spam [Gmail]/Bin [Gmail]/Trash].include?(@mailbox.name)
     end
 
+    # Move out of trash / bin.
+    def undelete!
+      @mailbox.messages[uid] = self
+      unflag(:deleted)
+
+      move_to(@mailbox.name) unless %w[[Gmail]/Spam [Gmail]/Bin [Gmail]/Trash].include?(@mailbox.name)
+    end
+
     # Archive this message.
     def archive!
       move_to('[Gmail]/All Mail')
@@ -128,6 +129,12 @@ module Gmail
     alias :add_label :label!
     alias :add_label! :label!
 
+    def labels
+      @labels ||= with_mailbox {
+        @gmail.conn.uid_fetch(uid, "X-GM-LABELS")[0].attr["X-GM-LABELS"]
+      }
+    end
+
     # Remove given label from this message.
     def remove_label!(name)
       move_to('[Gmail]/All Mail', name)
@@ -162,6 +169,12 @@ module Gmail
     def envelope
       @envelope ||= with_mailbox {
         @gmail.conn.uid_fetch(uid, "ENVELOPE")[0].attr["ENVELOPE"]
+      }
+    end
+
+    def thread_id
+      @thread_id ||= with_mailbox {
+        @gmail.conn.uid_fetch(uid, "X-GM-THRID")[0].attr["X-GM-THRID"]
       }
     end
 

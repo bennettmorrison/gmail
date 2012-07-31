@@ -112,19 +112,26 @@ describe "A Gmail mailbox" do
         end
       end
 
-      it "eager loads message thread_ids" do
+      it "eager loads message thread ids" do
         mock_mailbox do |mailbox|
           mailbox.emails(:all, :include => :thread).first.instance_variable_get(:@thread_id).should be
         end
       end
 
+      it "eager loads message message ids" do
+        mock_mailbox do |mailbox|
+          mailbox.emails(:all, :include => :msgid).first.instance_variable_get(:@msg_id).should be
+        end
+      end
+
       it "eager loads multiple options" do
         mock_mailbox do |mailbox|
-          mail = mailbox.emails(:all, :include => [:message, :envelope, :labels, :thread]).first
+          mail = mailbox.emails(:all, :include => [:message, :envelope, :labels, :thread, :msgid]).first
           mail.instance_variable_get(:@envelope).should be
           mail.instance_variable_get(:@message).should be
           mail.instance_variable_get(:@labels).should be
           mail.instance_variable_get(:@thread_id).should be
+          mail.instance_variable_get(:@msg_id).should be
         end
       end
     end

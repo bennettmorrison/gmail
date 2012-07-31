@@ -79,7 +79,7 @@ module Gmail
       opts =  case args.first
               when Symbol
                 args[1] ? args[1] : {}
-              when Hash then args
+              when Hash then args.first
               else {}
               end
       uids = fetch_uids(*args)
@@ -96,6 +96,7 @@ module Gmail
           when "envelope", :envelope then "ENVELOPE"
           when "labels", :labels then "X-GM-LABELS"
           when "thread", :thread then "X-GM-THRID"
+          when "msgid", :msgid then "X-GM-MSGID"
           else opt
           end
         end
@@ -105,7 +106,8 @@ module Gmail
             message = Message.new(self, msg.attr["UID"], message: msg.attr["RFC822"],
                                                          envelope: msg.attr["ENVELOPE"],
                                                          labels: msg.attr["X-GM-LABELS"],
-                                                         thread_id: msg.attr["X-GM-THRID"])
+                                                         thread_id: msg.attr["X-GM-THRID"],
+                                                         msg_id: msg.attr["X-GM-MSGID"])
             messages[msg.attr["UID"]] ||= message if cache_messages
             message
           end
