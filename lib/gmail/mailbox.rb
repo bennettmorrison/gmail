@@ -144,6 +144,7 @@ module Gmail
 
           @gmail.mailbox(name) do
             uids = @gmail.conn.uid_search(search)
+            uids = uids.first(opts[:limit]) if opts[:limit]
           end
         elsif args.first.is_a?(Hash)
           fetch_uids(:all, args.first)
