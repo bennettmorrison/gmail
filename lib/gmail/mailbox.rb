@@ -84,13 +84,12 @@ module Gmail
               end
       uids = fetch_uids(*args)
 
-      unless uids.empty?
+      unless uids.nil? || uids.empty?
         tmp_cache = []
         batch_size = opts[:batch_size] || 100
         cache_messages = opts[:cache_messages].nil? ? true : opts[:cache_messages]
 
-        fetch = ["UID"].push(opts[:include]).flatten.compact
-        fetch = fetch.collect do |opt|
+        fetch = ["UID"].push(opts[:include]).flatten.compact.collect do |opt|
           case opt
           when "message", :message then "RFC822"
           when "envelope", :envelope then "ENVELOPE"
@@ -145,6 +144,7 @@ module Gmail
           @gmail.mailbox(name) do
             uids = @gmail.conn.uid_search(search)
             uids = uids.first(opts[:limit]) if opts[:limit]
+            return uids
           end
         elsif args.first.is_a?(Hash)
           fetch_uids(:all, args.first)
