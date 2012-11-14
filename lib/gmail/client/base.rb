@@ -14,6 +14,9 @@ module Gmail
       attr_reader :username
       attr_reader :options
 
+      # when set to true, grabs email without marking as read
+      attr_accessor :peek
+      
       def initialize(username, options={})
         defaults       = {}
         @username      = fill_username(username)

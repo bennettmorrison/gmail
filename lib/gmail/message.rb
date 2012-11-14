@@ -17,6 +17,22 @@ module Gmail
       @thread_id = options[:thread_id]
       @msg_id = options[:msg_id]
     end
+        
+    def flags
+      @flags ||= @gmail.conn.uid_fetch(uid, "FLAGS")[0].attr["FLAGS"]
+    end
+
+    def is_read?
+      flags.include? :Seen
+    end
+
+    def is_starred?
+      labels.include? :Starred
+    end
+
+    def is_important?
+      labels.include? :Important
+    end
 
     def uid
       @uid ||= @gmail.conn.uid_search(['HEADER', 'Message-ID', message_id])[0]
@@ -38,7 +54,16 @@ module Gmail
       !!with_mailbox { @gmail.conn.uid_store(uid, "-FLAGS", [name]) }
     end
 
-    # Do commonly used operations on message.
+    # Proper way to label/star/move to inbox
+    def gmail_flag(name)
+      !!@gmail.mailbox(@mailbox.name) { @gmail.conn.uid_store(uid, "+X-GM-LABELS", [name]) }
+    end
+
+    def gmail_unflag(name)
+      !!@gmail.mailbox(@mailbox.name) { @gmail.conn.uid_store(uid, "-X-GM-LABELS", [name]) }
+    end
+
+    # Do commonly used operations on message. 
     def mark(flag)
       case flag
         when :read    then read!
@@ -67,12 +92,20 @@ module Gmail
 
     # Mark message with star.
     def star!
-      flag('[Gmail]/Starred')
+      gmail_flag(:Starred)
     end
 
     # Remove message from list of starred.
     def unstar!
-      unflag('[Gmail]/Starred')
+      gmail_unflag(:Starred)
+    end
+
+    def important!
+      gmail_flag(:Important)
+    end
+
+    def unimportant!
+      gmail_unflag(:Important)
     end
 
     # Move to trash / bin.
@@ -95,7 +128,8 @@ module Gmail
 
     # Archive this message.
     def archive!
-      move_to('[Gmail]/All Mail')
+      #move_to('[Gmail]/All Mail')
+      gmail_unflag(:Inbox)
     end
 
     # Move to given box and delete from others.
@@ -186,7 +220,9 @@ module Gmail
 
     def message
       @message ||= Mail.new(with_mailbox {
-        @gmail.conn.uid_fetch(uid, "RFC822")[0].attr["RFC822"] # RFC822
+        request,part = 'RFC822','RFC822'
+        request,part = 'BODY.PEEK[]','BODY[]' if @gmail.peek
+        @gmail.conn.uid_fetch(uid, request)[0].attr[part] # RFC822
       })
     end
     alias_method :raw_message, :message

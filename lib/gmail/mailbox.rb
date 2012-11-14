@@ -139,6 +139,9 @@ module Gmail
           opts[:search]     and search.concat ['BODY', opts[:search]]
           opts[:body]       and search.concat ['BODY', opts[:body]]
           opts[:uid]        and search.concat ['UID', opts[:uid]]
+          opts[:msg_id]     and search.concat ['X-GM-MSGID', opts[:msg_id].to_s]
+          opts[:thread_id]  and search.concat ['X-GM-THRID', opts[:thread_id].to_s]
+          opts[:google_raw] and search.concat ['X-GM-RAW', opts[:google_raw]]
           opts[:query]      and search.concat opts[:query]
 
           @gmail.mailbox(name) do
