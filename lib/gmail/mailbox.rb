@@ -84,8 +84,8 @@ module Gmail
               end
       uids = fetch_uids(*args)
 
+      tmp_cache = []
       unless uids.nil? || uids.empty?
-        tmp_cache = []
         batch_size = opts[:batch_size] || 100
         cache_messages = opts[:cache_messages].nil? ? true : opts[:cache_messages]
 
@@ -113,8 +113,8 @@ module Gmail
           batch = block.call(batch) if block_given?
           tmp_cache = tmp_cache | batch if cache_messages
         end
-        tmp_cache
       end
+      tmp_cache
     end
 
     # Fetches the list of message UIDs based on the criteria provided
