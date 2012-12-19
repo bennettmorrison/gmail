@@ -27,16 +27,19 @@ module Gmail
     class UnknownClient < ArgumentError; end
 
     def self.register(name, klass)
-      @clients ||= {}
-      @clients[name] = klass
+      clients[name] = klass
     end
 
     def self.new(name, *args)
-      if client = @clients[name]
+      if client = clients[name]
         client.new(*args)
       else
         raise UnknownClient, "No such client: #{name}" 
       end
+    end
+
+    def self.clients
+      @clients ||= {}
     end
 
     require 'gmail/client/imap_extensions'
