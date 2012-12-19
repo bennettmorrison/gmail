@@ -28,7 +28,8 @@ module Gmail
         @list << label
       else
         @list << label
-        conn.list("#{label.name}/", "%").each {|l| sublabels_or_label(l)}
+        sub_labels = conn.list("#{label.name}/", "%")
+        sub_labels.each {|l| sublabels_or_label(l)} unless sub_labels.nil? || sub_labels.empty?
       end
     end
     
