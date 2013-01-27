@@ -94,8 +94,14 @@ module Gmail
           when "message", :message then "RFC822"
           when "envelope", :envelope then "ENVELOPE"
           when "labels", :labels then "X-GM-LABELS"
-          when "thread", :thread then "X-GM-THRID"
-          when "msgid", :msgid then "X-GM-MSGID"
+          when "thread_id", :thread_id then "X-GM-THRID"
+          when "msg_id", :msg_id then "X-GM-MSGID"
+          when "thread", :thread
+            p 'The :thread option has been depreciated. Please use :thread_id instead'
+            "X-GM-THRID"
+          when "msgid", :msgid
+            p 'The :msgid option has been depreciated. Please use :msg_id instead'
+            "X-GM-MSGID"
           else opt
           end
         end
