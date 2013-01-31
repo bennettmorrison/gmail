@@ -158,7 +158,7 @@ module Gmail
       #   end
       def mailbox(name, examine = false, &block)
         @mailbox_monitor.synchronize do
-          name = labels.localize(name)
+          name = parse_mailbox_name(name)
           switch_to_mailbox(name, examine) if @current_mailbox != [name, examine]
           mailbox = (mailboxes[[name, examine]] ||= Mailbox.new(self, name, @imap.responses["UIDVALIDITY"][-1], examine))
 
@@ -230,6 +230,10 @@ module Gmail
           :authentication => 'plain',
           :enable_starttls_auto => true
         }]
+      end
+
+      def parse_mailbox_name(name)
+        Net::IMAP.encode_utf7(labels.localize(name))
       end
     end # Base
   end # Client
