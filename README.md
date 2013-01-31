@@ -228,12 +228,17 @@ Create new label:
     
 Remove labels:
 
-    gmail.labels.delete("Uregent")
+    gmail.labels.delete("Urgent")
     
 Or check if given label exists:
 
     gmail.labels.exists?("Uregent") # => false
     gmail.labels.exists?("AnotherOne") # => true
+
+Localizing labels:
+
+    gmail.labels.localize(:allmail) # => "[Gmail]\All Mail"
+                                    # => "[Google Mail]\All Mail"
 
 ### Composing and sending emails
 
