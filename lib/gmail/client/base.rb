@@ -158,7 +158,7 @@ module Gmail
       #   end
       def mailbox(name, examine = false, &block)
         @mailbox_monitor.synchronize do
-          name = name.to_s
+          name = labels.localize(name)
           switch_to_mailbox(name, examine) if @current_mailbox != [name, examine]
           mailbox = (mailboxes[[name, examine]] ||= Mailbox.new(self, name, @imap.responses["UIDVALIDITY"][-1], examine))
 
