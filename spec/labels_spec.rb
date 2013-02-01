@@ -13,6 +13,17 @@ describe Gmail::Labels do
           end
         end
       end
+
+      context 'which does not exist on server' do
+        it 'raises a UnknownMailbox exception' do
+          expect do
+            mock_connection = mock()
+            mock_connection.expects(:list).returns([])
+            labels = Gmail::Labels.new mock_connection
+            labels.localize(:all)
+          end.to raise_error(Gmail::Client::UnknownMailbox)
+        end
+      end
     end
   end
 end

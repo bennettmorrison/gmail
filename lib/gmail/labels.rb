@@ -69,7 +69,7 @@ module Gmail
       type = label.to_sym.capitalize
       if [:All, :Drafts, :Sent, :Trash, :Important, :Junk, :Flagged].include? type
         @mailboxes ||= connection.list("", "*")
-        @mailboxes.select {|box| box.attr.include? type }.collect(&:name).compact.uniq.first
+        @mailboxes.select {|box| box.attr.include? type }.collect(&:name).compact.uniq.first || raise(Client::UnknownMailbox)
       elsif type == :Inbox
         'INBOX'
       else

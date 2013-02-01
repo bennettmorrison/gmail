@@ -25,6 +25,8 @@ module Gmail
     class DeliveryError < ArgumentError; end
     # Raised when given client is not registered
     class UnknownClient < ArgumentError; end
+    # Raised when localizing a label which does not exist on server
+    class UnknownMailbox < ArgumentError; end
 
     def self.register(name, klass)
       clients[name] = klass

@@ -232,6 +232,7 @@ module Gmail
         }]
       end
 
+      # Localizes and UTF7 formats a folder name
       def parse_mailbox_name(name)
         Net::IMAP.encode_utf7(labels.localize(name))
       end
