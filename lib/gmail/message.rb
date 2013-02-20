@@ -11,7 +11,7 @@ module Gmail
       @uid     = uid
       @mailbox = mailbox
       @gmail   = mailbox.instance_variable_get("@gmail") if mailbox
-      @message = options[:message]
+      @message = Mail.new options[:message]
       @envelope = options[:envelope]
       @labels = options[:labels]
       @thread_id = options[:thread_id]
