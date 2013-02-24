@@ -72,7 +72,31 @@ module GmailImapExtensions
         end
         return result
       end
+
     end # class_eval
+
+    # Bootstrap negative numbers into the NUMBER regexp
+    #
+    # Handle Gmail's  malformed (negative) X-GM-IDs, which trip up the old
+    # NUMBER regexp pattern
+    klass.send :remove_const, :BEG_REGEXP
+    klass.const_set 'BEG_REGEXP', /\G(?:\
+(?# 1:  SPACE   )( +)|\
+(?# 2:  NIL     )(NIL)(?=[\x80-\xff(){ \x00-\x1f\x7f%*#{'"'}\\\[\]+])|\
+(?# 3:  NUMBER  )(-?\d+)(?=[\x80-\xff(){ \x00-\x1f\x7f%*#{'"'}\\\[\]+])|\
+(?# 4:  ATOM    )([^\x80-\xff(){ \x00-\x1f\x7f%*#{'"'}\\\[\]+]+)|\
+(?# 5:  QUOTED  )"((?:[^\x00\r\n"\\]|\\["\\])*)"|\
+(?# 6:  LPAR    )(\()|\
+(?# 7:  RPAR    )(\))|\
+(?# 8:  BSLASH  )(\\)|\
+(?# 9:  STAR    )(\*)|\
+(?# 10: LBRA    )(\[)|\
+(?# 11: RBRA    )(\])|\
+(?# 12: LITERAL )\{(\d+)\}\r\n|\
+(?# 13: PLUS    )(\+)|\
+(?# 14: PERCENT )(%)|\
+(?# 15: CRLF    )(\r\n)|\
+(?# 16: EOF     )(\z))/ni
 
     # Add String#unescape
     add_unescape

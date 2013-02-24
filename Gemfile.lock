@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gmail (0.4.4)
+    gmail (0.4.5)
       gmail_xoauth (>= 0.3.0)
       mail (>= 2.2.1)
       mime (>= 0.1)
